@@ -1,0 +1,49 @@
+:root {
+    --color-primary: #4608ad;
+    --color-primary-darken: #32067c;
+    --color-primary-lighten: #f4f1fa;
+    --color-secondary: #fafafa;
+    --color-secondary-darken: #e0e0e0;
+    --color-text: #4a4a4a;
+    --color-text-lighten: #7a7a7a;
+    --color-text-dark: var(--color-primary-lighten);
+    --color-success: #50b154;
+    --color-error: #ff5252;
+}
+html, body, h1, h2, h3  { margin: 0;}
+header, .content, footer {
+    padding: 20px;
+}
+header {
+    color: var(--color-primary-lighten);
+    background: var(--color-primary);
+}
+.content {
+    width: 300px;
+    padding: 10px;
+    background-color: white;
+    color: var(--color-text);
+}
+.content table {
+    width: 100%;
+    /* border: 1px solid red; */
+    border-collapse: 0;
+}
+.content table  th,td {
+    text-align: left;
+}
+footer {
+    background-color: var(--color-primary-lighten);
+    color: var(--color-primary);
+}
+
+.iconfont {
+    margin-right: 5px;
+}
+
+.icon-chenggong {
+    color: var(--color-success);
+}
+.icon-jinggao {
+    color: var(--color-error);
+}

@@ -1,0 +1,38 @@
+{
+  "name": "Zdeal",
+  "description": "执中 Zdeal 助手",
+  "version": "1.0",
+  "manifest_version": 3,
+  "icons": {
+    "16": "img/icon16.png"
+  },
+  "permissions": [
+    "contextMenus",
+    "tabs",
+    "storage"
+  ],
+  "host_permissions": [
+    "http://*/*",
+    "https://*/*"
+  ],
+  "background": {
+    "service_worker": "js/background.js"
+  },
+  "action": {
+    "default_icon": "img/icon16.png",
+    "default_title": "Click Me",
+    "default_popup": "html/popup.html"
+  },
+  "content_scripts": [
+    {
+      "matches": [
+        "http://*.zdeal.com.cn/info/*",
+        "https://*.zdeal.com.cn/info/*"
+      ],
+      "js": [
+        "js/content.js"
+      ],
+      "run_at": "document_idle"
+    }
+  ]
+}
