@@ -30,6 +30,7 @@
         "https://*.zdeal.com.cn/info/*"
       ],
       "js": [
+        "js/jquery-3.6.0.min.js",
         "js/content.js"
       ],
       "run_at": "document_idle"
