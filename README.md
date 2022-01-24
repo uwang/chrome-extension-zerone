@@ -29,6 +29,9 @@
 	]
 }
 ```
+1. content.js 中请求爬虫数据
+2. 将数据缓存，key 为 tab.id
+3. popup.js 获取数据展示
 
 ## Chrome 插件开发资料
 

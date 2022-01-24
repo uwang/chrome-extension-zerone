@@ -8,18 +8,13 @@ chrome.runtime.onInstalled.addListener(() => {
     title: "Sample Context Menu",
     contexts: ["selection"], // 只有当选中文字时才会出现此右键菜单
   });
-
-  const message = {
-    cmd: "test",
-    payload: {
-      value: "你好",
-    },
-  };
-  sendMessageToContentScript(message, function (response) {
-    console.log("来自 content 的回复：", response);
-  });
 });
 
+/**
+ * 发送消息到 content script
+ * @param {Object} message { cmd: '', payload: {}}
+ * @param {*} callback 
+ */
 function sendMessageToContentScript(message, callback) {
   chrome.tabs.query({ active: true, currentWindow: true }, function (tabs) {
     chrome.tabs.sendMessage(tabs[0].id, message, function (response) {
@@ -28,52 +23,76 @@ function sendMessageToContentScript(message, callback) {
   });
 }
 
-async function handleQuery(payload) {
-  const tab = await getCurrentTab();
-  console.log("tab", tab);
-  chrome.action.setBadgeBackgroundColor({ color: "red" });
-  chrome.action.setBadgeText({ text: tab.id + "", tabId: tab.id });
-  const page = {}
-  const key = 'zdeal.' + tab.id
-  const value = tab.id + ''
-  page[key] = value
-  chrome.storage.local.set({ page }, function() {
-    console.log('page is set to ', page);
-  });
-  console.log("handleQuery", payload);
-}
-
-function randomText() {
-  return Math.ceil(Math.random() * 10) + "";
+function sendMessageToPopup (message) {
+  chrome.runtime.sendMessage(message);
 }
 
 chrome.runtime.onMessage.addListener(function (message, sender, sendResponse) {
+  console.log('sender', sender);
+  console.log('sender.tab', sender.tab);
   const source =
     "get message " +
     (sender.tab
       ? "from a content script:" + sender.tab.url
-      : "from the extension");
+      : "from popup script");
 
-  console.log(source, JSON.stringify(message));
+  console.log(source);
 
   switch (message.cmd) {
     case "query":
-      handleQuery(message.payload);
+      handleQuery(sendResponse);
+      break;
+    case "store":
+      handleStore(sender.tab.id, message.payload);
       break;
   }
 
-  sendResponse({ cmd: "copy" });
+  return true;
 });
+
+async function handleStore(tabId, payload) {
+  console.log('handleStore', payload);
+  // const tab = await getCurrentTab();
+  // console.log('tab', tab);
+  const failList = payload.list.filter(function (item) {
+    item.result !== '一致'
+  });
+  if (failList && failList.length) {
+    chrome.action.setBadgeBackgroundColor({ color: "red" });
+    chrome.action.setBadgeText({ text: failList.length + "", tabId });
+  } else {
+    chrome.action.setBadgeBackgroundColor({ color: "green" });
+    chrome.action.setBadgeText({ text: payload.list.length + "", tabId });
+  }
+  const data = {}
+  const key = 'zdeal.' + tabId
+  const value = JSON.stringify(payload)
+  data[key] = JSON.stringify(payload)
+  console.log('local.set', data);
+  return chrome.storage.local.set(data, function() {
+    console.log(key + ' is set to ', value);
+  });
+}
+
+async function handleQuery () {
+  const tab = await getCurrentTab();
+  const key = 'zdeal.' + tab.id;
+  console.log('get.key:', key);
+  chrome.storage.local.get(key, function (data) {
+    console.log('storage.local.get', data);
+    chrome.runtime.sendMessage({ cmd: 'query', payload: data[key] });
+  });
+}
 
 chrome.tabs.onActivated.addListener(function (activeInfo) {
   console.log('change tab', activeInfo.tabId)
-  chrome.storage.local.get('page', function(data) {
-    const key = 'zdeal.' + activeInfo.tabId;
-    if (data && data.page && data.page.hasOwnProperty(key)) {
-      // chrome.action.setBadgeBackgroundColor({ color: "red" });
-      // chrome.action.setBadgeText({ text: tabId + "", tabId: tabId });
+  const key = 'zdeal.' + activeInfo.tabId
+  console.log('key', key)
+  chrome.storage.local.get(key, function(data) {
+    console.log('onActivated get storage', data)
+    if (data.hasOwnProperty('list')) {
+      console.log('onActivated get storage data.list', data.list);
     }
-    console.log('get storage', data.page);
   });
 });
 
