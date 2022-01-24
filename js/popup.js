@@ -1,13 +1,6 @@
 $(async function() {
     // alert('popup init ' + jQuery.fn.jquery);
-    $('tbody').append('<tr><td>合伙人信息</td><td><span class="iconfont icon-chenggong"></span>一致</td></tr>');
-    $('tbody').append('<tr><td>投资历史</td><td><span class="iconfont icon-jinggao"></span>不同</td></tr>');
-    $('#footer').append('<a href="https://www.qcc.com/web/search?key=%E6%B7%B1%E5%9C%B3%E7%BA%A2%E6%9D%89%E5%AE%89%E6%B3%B0%E8%82%A1%E6%9D%83%E6%8A%95%E8%B5%84%E5%90%88%E4%BC%99%E4%BC%81%E4%B8%9A%EF%BC%88%E6%9C%89%E9%99%90%E5%90%88%E4%BC%99%EF%BC%89" target="_blank">查看企查查对应页面</a>');
-    $('#tip').append('暂无数据');
-
-    chrome.runtime.sendMessage({ cmd: 'query' }, function (response) {
-        console.log('response', response);
-    });
+    chrome.runtime.sendMessage({ cmd: 'query' });
 });
 
 chrome.runtime.onMessage.addListener(function (message, sender, sendResponse) {
@@ -29,5 +22,24 @@ chrome.runtime.onMessage.addListener(function (message, sender, sendResponse) {
 
 function renderTable (data) {
     console.log('renderTable', data);
+    const elementTable = $('tbody')
+    const elementFooter = $('#footer')
+    elementTable.empty();
+    elementFooter.empty();
+    $('#tip').empty();
+    if (data.list.length) {
+        data.list.forEach(function(item) {
+            if (item.result === '一致') {
+                elementTable.append(`<tr><td>${item.name}</td><td><span class="iconfont icon-chenggong"></span>一致</td></tr>`);
+            } else {
+                elementTable.append(`<tr><td>${item.name}</td><td><span class="iconfont icon-jinggao"></span>不同</td></tr>`);
+            }
+        });
+        if (data.url) {
+            elementFooter.append(`<a href="${data.url}" target="_blank">查看企查查对应页面</a>`);
+        }
+    } else {
+        $('#tip').html('暂无数据');
+    }
 }
 
