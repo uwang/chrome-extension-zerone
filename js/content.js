@@ -43,26 +43,30 @@ function handleQuery() {
     entityName,
   };
 
-  console.log('请求接口', payload);
+  const token = window.localStorage.getItem('token');
+  console.log('请求接口', { ...payload, token });
 
-  $.ajax({
-    url: "http://0.0.0.0:9090/api/staticdata",
-    method: 'post',
-    data: {
-      entityId: 100010547088,
-      entityType: 'fund',
-      entityName: '深圳市红杉瀚辰股权投资合伙企业（有限合伙）',
-      username:'xxx',
-      password:'yyy',
-      Authorization: '958d903c3b86469b8b6a5b44010ff816'
-    },
-    success: function( result ) {
-      console.log('success', result)
-    }
-  });
-
-  sendMessageToBackground({ cmd: "query", payload }, function (response) {
-    console.log('response', response);
+  chrome.storage.sync.get({
+    username: 'xxx',
+    password: 'yyy'
+  }, function(items) {
+    // document.getElementById('username').value = items.username;
+    // document.getElementById('password').value = items.password;
+    $.ajax({
+      url: "http://106.14.21.212:8080/api/staticdata",
+      method: 'post',
+      data: {
+        entityId: 100010547088,
+        entityType: 'fund',
+        entityName: '深圳市红杉瀚辰股权投资合伙企业（有限合伙）',
+        username: items.username,
+        password: items.password,
+        Authorization: token
+      },
+      success: function( result ) {
+        console.log('success', result)
+      }
+    });
   });
 }
 
