@@ -55,7 +55,7 @@ async function handleStore(tabId, payload) {
   // const tab = await getCurrentTab();
   // console.log('tab', tab);
   const failList = payload.list.filter(function (item) {
-    item.result !== '一致'
+    return item.result !== '一致'
   });
   if (failList && failList.length) {
     chrome.action.setBadgeBackgroundColor({ color: "red" });
