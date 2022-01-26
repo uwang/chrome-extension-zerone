@@ -12,10 +12,13 @@
 </head>
 <body>
     <header>
-        <h2>执中Zdeal数据实时比对</h2>
+        <h3>执中Zdeal小助手</h3>
     </header>
-    <div class="content" style="margin-bottom: 10px;">
-        <p>当前对比结果</p>
+    <div class="content">
+        <input id="search" type="text" placeholder="搜索投资机构/基金/项目/LP/基金管理人/标签">
+    </div>
+    <div id='data-comparison' class="content" style="display: none;">
+        <p>实时数据比对</p>
         <table border="1" cellspacing="0" cellpadding="5">
             <thead>
                 <tr>
@@ -28,8 +31,8 @@
         </table>
         <div id="tip"></div>
         <button>数据上报</button>
+        <footer id="footer">
+        </footer>
     </div>
-    <footer id="footer">
-    </footer>
 </body>
 </html>

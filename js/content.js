@@ -1,7 +1,7 @@
 window.console.log("content js loaded");
 
 $(function() {
-  setTimeout(handleQuery, 3000);
+  handleQuery();
 })
 
 // chrome.runtime.onMessage.addListener(function (message, sender, sendResponse) {

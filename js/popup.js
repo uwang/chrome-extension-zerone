@@ -1,6 +1,8 @@
 $(async function() {
     // alert('popup init ' + jQuery.fn.jquery);
     chrome.runtime.sendMessage({ cmd: 'query' });
+
+    $('#search').on('keypress', handleEnter);
 });
 
 chrome.runtime.onMessage.addListener(function (message, sender, sendResponse) {
@@ -15,18 +17,25 @@ chrome.runtime.onMessage.addListener(function (message, sender, sendResponse) {
     switch (message.cmd) {
       case "query":
         console.log(message.payload);
-        renderTable(JSON.parse(message.payload));
+        if (message.payload) {
+            $('#data-comparison').show('fast', function() {
+                renderTable(JSON.parse(message.payload));
+            });
+        }
         break;
     }
 });
 
+function resetTable () {
+    $('tbody').empty();
+    $('#footer').empty();
+    $('#tip').empty();
+}
+
 function renderTable (data) {
     console.log('renderTable', data);
+    resetTable();
     const elementTable = $('tbody')
-    const elementFooter = $('#footer')
-    elementTable.empty();
-    elementFooter.empty();
-    $('#tip').empty();
     if (data.list.length) {
         data.list.forEach(function(item) {
             if (item.result === '一致') {
@@ -36,10 +45,23 @@ function renderTable (data) {
             }
         });
         if (data.url) {
-            elementFooter.append(`<a href="${data.url}" target="_blank">查看企查查对应页面</a>`);
+            $('#footer').append(`<a href="${data.url}" target="_blank">查看企查查对应页面</a>`);
         }
     } else {
         $('#tip').html('暂无数据');
     }
+}
+
+function handleEnter (event) {
+    if (event.keyCode === 13) {
+        const q = $('#search').val().trim();
+        handleSearch (q);
+        $('#search').val('');
+    }
+}
+
+
+function handleSearch (word) {
+    window.open('http://test.zdeal.com.cn/search/?wd=' + word, '_blank');
 }
 

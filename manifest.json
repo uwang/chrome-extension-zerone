@@ -1,7 +1,7 @@
 {
   "name": "Zdeal",
-  "description": "执中 Zdeal 助手",
-  "version": "0.1.1",
+  "description": "执中Zdeal小助手",
+  "version": "0.1.2",
   "manifest_version": 3,
   "icons": {
     "16": "img/icon16.png",
