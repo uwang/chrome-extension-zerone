@@ -29,9 +29,9 @@
 	]
 }
 ```
-1. content.js 中请求爬虫数据
-2. 将数据缓存，key 为 tab.id
-3. popup.js 获取数据展示
+1. content.js 中调用 api 服务
+2. content.js 将 api 服务返回数据通过消息，通知 background.js 将数据缓存，key 为 tab.id
+3. popup.js 通过消息，向 background.js 要缓存的数据，将页面展示在 popup.html
 
 ## Chrome 插件开发资料
 
