@@ -1,7 +1,7 @@
 window.console.log("content js loaded");
 
 $(function() {
-  handleQuery();
+  setTimeout(handleQuery, 1500);
 })
 
 // chrome.runtime.onMessage.addListener(function (message, sender, sendResponse) {
@@ -28,7 +28,10 @@ async function handleQuery() {
   } catch (err) {
     console.error(err)
   }
-  if (!entityName) return
+  if (!entityName) {
+    console.warn('浏览器插件初始化失败');
+    return;
+  }
 
   // http://test.zdeal.com.cn/info/fund/100010324940
   // "/info/fund/100010324940"
