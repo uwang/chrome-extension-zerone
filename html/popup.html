@@ -5,6 +5,7 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Document</title>
+    <!-- <link rel="stylesheet" href="../css/tailwind.min.css"> -->
     <link rel="stylesheet" href="../css/popup.css">
     <link rel="stylesheet" href="../css/iconfont.css">
     <script src="../js/jquery-3.6.0.min.js"></script>
@@ -14,25 +15,31 @@
     <header>
         <h3>执中Zdeal小助手</h3>
     </header>
-    <div class="content">
-        <input id="search" type="text" placeholder="搜索投资机构/基金/项目/LP/基金管理人/标签">
-    </div>
-    <div id='data-comparison' class="content" style="display: none;">
-        <p>实时数据比对</p>
-        <table border="1" cellspacing="0" cellpadding="5">
-            <thead>
-                <tr>
-                    <th>模块名</th>
-                    <th>对比结果</th>
-                </tr>
-            </thead>
-            <tbody>
-            </tbody>
-        </table>
-        <div id="tip"></div>
-        <button>数据上报</button>
-        <footer id="footer">
-        </footer>
+    <div class="container">
+        <div class="content" style="position: relative;">
+            <input id="search" type="text" class="rounded text-pink-500"  placeholder="搜索投资机构/基金/项目/LP/基金管理人/标签">
+            <span class="iconfont icon-search" style="position: absolute; right: 5px;top: 9px;font-size: 12px;color: #999;"></span>
+        </div>
+        <div class="content" id='data-comparison' style="display: none;">
+            <p style="color: #2E2E2E;font-size: 16px;font-weight: bolder;">实时数据比对</p>
+            <table cellspacing="0" cellpadding="5">
+                <thead>
+                    <tr>
+                        <th>模块名</th>
+                        <th>对比结果</th>
+                    </tr>
+                </thead>
+                <tbody>
+                </tbody>
+            </table>
+            <div id="tip"></div>
+            <!-- <div style="text-align: center;">
+                <button>数据上报</button>
+            </div> -->
+            <footer id="footer">
+                <a  target="_blank">查看企查查对应页面</a>
+            </footer>
+        </div>
     </div>
 </body>
 </html>

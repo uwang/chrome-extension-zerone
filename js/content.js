@@ -2,21 +2,7 @@ window.console.log("content js loaded");
 
 $(function() {
   setTimeout(handleQuery, 1500);
-})
-
-// chrome.runtime.onMessage.addListener(function (message, sender, sendResponse) {
-//   const source =
-//     "get message" +
-//     (sender.tab
-//       ? "from a content script:" + sender.tab.url
-//       : "from the extension");
-//   console.log(source);
-
-//   switch (message.cmd) {
-//     case "test":
-//       break;
-//   }
-// });
+});
 
 /**
  * 处理基金详情页

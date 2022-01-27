@@ -10,6 +10,8 @@ chrome.runtime.onInstalled.addListener(() => {
   });
 });
 
+let tag = '';
+
 /**
  * 发送消息到 content script
  * @param {Object} message { cmd: '', payload: {}}
@@ -84,12 +86,23 @@ async function handleQuery () {
   });
 }
 
-chrome.tabs.onActivated.addListener(function (activeInfo) {
-  console.log('change tab', activeInfo.tabId)
-  const key = 'zdeal.' + activeInfo.tabId
-  console.log('key', key)
+chrome.tabs.onActivated.addListener(async function (activeInfo) {
+  const tab = await getCurrentTab();
+  console.log('tab.url', tab.url);
+  // 从 tab.url 中解析 host
+  const uri = tab.url ? new URL(tab.url) : { host: '' }
+  const suffix = uri && uri.host.endsWith('zdeal.com.cn') ? '' : '-gray'
+  chrome.action.setIcon({ path: {
+    "16": `../img/16${suffix}.png`,
+    "48": `../img/48${suffix}.png`,
+    "128": `../img/128${suffix}.png`
+  } });
+  // console.log('activeInfo', activeInfo);
+  // console.log('change tab', activeInfo.tabId);
+  const key = 'zdeal.' + activeInfo.tabId;
+  console.log('key', key);
   chrome.storage.local.get(key, function(data) {
-    console.log('onActivated get storage', data)
+    console.log('onActivated get storage', data);
     if (data.hasOwnProperty('list')) {
       console.log('onActivated get storage data.list', data.list);
     }
