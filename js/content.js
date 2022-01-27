@@ -35,9 +35,10 @@ async function handleQuery() {
   console.log('请求接口', { ...payload, token });
 
   chrome.storage.sync.get({
+    webHost: "https://zdeal.com.cn",
+    apiHost: 'https://smart.zdeal.com.cn',
     username: 'xxx',
     password: 'yyy',
-    apiHost: 'https://smart.zdeal.com.cn'
   }, function(items) {
     // document.getElementById('username').value = items.username;
     // document.getElementById('password').value = items.password;
@@ -48,6 +49,7 @@ async function handleQuery() {
         ...payload,
         username: items.username,
         password: items.password,
+        webHost: items.webHost,
         Authorization: token
       },
       success: function( result ) {
