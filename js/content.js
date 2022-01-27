@@ -36,12 +36,13 @@ async function handleQuery() {
 
   chrome.storage.sync.get({
     username: 'xxx',
-    password: 'yyy'
+    password: 'yyy',
+    apiHost: 'https://smart.zdeal.com.cn'
   }, function(items) {
     // document.getElementById('username').value = items.username;
     // document.getElementById('password').value = items.password;
     $.ajax({
-      url: "http://106.14.21.212:8080/api/staticdata",
+      url: `${items.apiHost}/api/staticdata`,
       method: 'post',
       data: {
         ...payload,

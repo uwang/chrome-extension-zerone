@@ -60,8 +60,15 @@ function handleEnter (event) {
     }
 }
 
-
+/**
+ * 搜索
+ * @param {*} word 
+ */
 function handleSearch (word) {
-    window.open('http://test.zdeal.com.cn/search/?wd=' + word, '_blank');
+    chrome.storage.sync.get({
+        webHost: 'https://zdeal.com.cn'
+      }, function(items) {
+        window.open(`${items.webHost}/search/?wd=` + word, '_blank');
+      });
 }
 
