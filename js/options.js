@@ -30,7 +30,7 @@ function restore_options() {
   chrome.storage.sync.get(
     {
       webHost: "https://zdeal.com.cn",
-      apiHost: "http://106.14.21.212:8080",
+      apiHost: "https://smart.zdeal.com.cn",
       username: "xxx",
       password: "yyy",
     },
