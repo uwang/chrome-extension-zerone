@@ -11,12 +11,10 @@
   "permissions": [
     "contextMenus",
     "tabs",
-    "storage"
+    "storage",
+    "cookies"
   ],
-  "host_permissions": [
-    "http://*/*",
-    "https://*/*"
-  ],
+  "host_permissions": ["<all_urls>"],
   "background": {
     "service_worker": "js/background.js"
   },

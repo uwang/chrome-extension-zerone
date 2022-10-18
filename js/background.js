@@ -2,11 +2,27 @@
 // Listeners must be registered synchronously from the start of the page.
 // Listen to the runtime.onInstalled event to initialize an extension on installation.
 // Use this event to set a state or for one-time initialization, such as a context menu.
-chrome.runtime.onInstalled.addListener(() => {
+
+/**
+ * 使用 background 管理事件
+ * background是插件的事件处理程序，它包含对插件很重要的浏览器事件的监听器。
+ * background处于休眠状态，直到触发事件，然后执行指示的逻辑；一个好的background仅在需要时加载，并在空闲时卸载。
+ */
+
+chrome.runtime.onInstalled.addListener(function (){
+  console.log("插件已被安装");
   chrome.contextMenus.create({
     id: "sampleContextMenu",
     title: "Sample Context Menu",
     contexts: ["selection"], // 只有当选中文字时才会出现此右键菜单
+  });
+
+  chrome.cookies.getAll({ domain: '.qcc.com' }, function (cookies) {
+    const cookieList = [];
+    cookies.forEach(cookie => {
+      cookieList.push(cookie.name + ':' + cookie.value)
+    });
+    console.log('cookies', cookieList.join('; '))
   });
 });
 
@@ -25,32 +41,46 @@ function sendMessageToContentScript(message, callback) {
   });
 }
 
+/**
+ * 发送消息到 popup script
+ * @param {Object} message 
+ */
 function sendMessageToPopup (message) {
   chrome.runtime.sendMessage(message);
 }
 
-chrome.runtime.onMessage.addListener(function (message, sender, sendResponse) {
-  console.log('sender', sender);
-  console.log('sender.tab', sender.tab);
-  const source =
-    "get message " +
-    (sender.tab
-      ? "from a content script:" + sender.tab.url
-      : "from popup script");
-
-  console.log(source);
-
-  switch (message.cmd) {
-    case "query":
-      handleQuery(sendResponse);
-      break;
-    case "store":
-      handleStore(sender.tab.id, message.payload);
-      break;
-  }
-
-  return true;
+/**
+ * 监听消息
+ * 不管是在后台，还是在内容脚本中，我们都使用runtime.onMessage监听消息的接收事件，不同的是回调函数中的sender，标识不同的发送方
+ */
+chrome.runtime.onMessage.addListener( function(request, sender, sendResponse) {
+  const text = 'recevie message ' + (sender.tab ? "from a content script:" + sender.tab.url : "from the background script")
+  console.log(text, request);
+  // if (request.greeting.indexOf("hello") !== -1){}
+  sendResponse({ farewell: "goodbye" });
 });
+// chrome.runtime.onMessage.addListener(function (message, sender, sendResponse) {
+//   console.log('sender', sender);
+//   console.log('sender.tab', sender.tab);
+//   const source =
+//     "get message " +
+//     (sender.tab
+//       ? "from a content script:" + sender.tab.url
+//       : "from popup script");
+
+//   console.log(source);
+
+//   switch (message.cmd) {
+//     case "query":
+//       handleQuery(sendResponse);
+//       break;
+//     case "store":
+//       handleStore(sender.tab.id, message.payload);
+//       break;
+//   }
+
+//   return true;
+// });
 
 async function handleStore(tabId, payload) {
   console.log('handleStore', payload);
@@ -86,9 +116,12 @@ async function handleQuery () {
   });
 }
 
+/**
+ * 监听 tab 切换
+ */
 chrome.tabs.onActivated.addListener(async function (activeInfo) {
   const tab = await getCurrentTab();
-  console.log('tab.url', tab.url);
+  console.log('监听 tab 切换', tab.url);
   // 从 tab.url 中解析 host
   const uri = tab.url ? new URL(tab.url) : { host: '' }
   const suffix = uri && uri.host.endsWith('zdeal.com.cn') ? '' : '-gray'
