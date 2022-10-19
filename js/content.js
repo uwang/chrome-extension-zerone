@@ -5,47 +5,81 @@
 
 window.console.log("content js loaded");
 
-$(function() {
-  setTimeout(handleQuery, 1500);
+/**
+ * qcc.com 的 content script 主要就是返回 cookie 和 tid
+ */
+const qcc = {
+  /**
+   * 返回当前页面的 cookie
+   * @returns String
+   */
+  getCookie: function () {
+    return document.cookie;
+  },
+  /**
+   * 从脚本内容中提取 tid
+   */
+  getTid: function () {
+    // "window.pid='bfb9eff9a02efeff6053cbb16a7fe922'; window.tid='495ff49955f918b679cedac9ab064908'"
+    const content = window.document.scripts[3].text;
+    const tid = /window.tid='(\w+)'/g.exec(content)[1];
+    return tid;
+  }
+}
 
-  // content-script.js
-  chrome.runtime.sendMessage(
-    { greeting: "hello，我是content-script，主动发消息给后台！" },
-    function (response) {
-      console.log("收到来自后台的回复：", response);
-    }
-  );
+/**
+ * 发送消息到后台
+ * @param {Object} message { cmd: '', payload: {}}
+ * @param {Function} callback 
+ */
+function sendMessageToBackground (message, callback) {
+  chrome.runtime.sendMessage(message, function (response) {
+    if (callback) callback(response);
+  });
+}
+
+/**
+ * 页面初始化
+ */
+$(function() {
+  if (window.location.href.includes('zdeal.com.cn')) {
+    const message = { cmd: 'ask.qcc' };
+    sendMessageToBackground(message, function (response) {
+      console.log('请求 qcc.com 数据', response);
+    });
+  }
 });
 
 /**
  * 处理基金详情页
  */
 async function handleQuery() {
-  let entityName
-  try {
-    entityName = document.getElementsByClassName("company")[0].innerText;
-  } catch (err) {
-    console.error(err)
-  }
-  if (!entityName) {
-    console.warn('浏览器插件初始化失败');
-    return;
-  }
+  console.log('请求接口');
+  // let entityName
+  // try {
+  //   entityName = document.getElementsByClassName("company")[0].innerText;
+  // } catch (err) {
+  //   console.error(err)
+  // }
+  // if (!entityName) {
+  //   console.warn('浏览器插件初始化失败');
+  //   return;
+  // }
 
-  // http://test.zdeal.com.cn/info/fund/100010324940
-  // "/info/fund/100010324940"
-  const list = /\/(\w+)\/(\d+)/.exec(location.pathname);
-  const entityType = list[1];
-  const entityId = list[2];
+  // // http://test.zdeal.com.cn/info/fund/100010324940
+  // // "/info/fund/100010324940"
+  // const list = /\/(\w+)\/(\d+)/.exec(location.pathname);
+  // const entityType = list[1];
+  // const entityId = list[2];
 
-  const payload = {
-    entityId,
-    entityType,
-    entityName,
-  };
+  // const payload = {
+  //   entityId,
+  //   entityType,
+  //   entityName,
+  // };
 
-  const token = window.localStorage.getItem('token');
-  console.log('请求接口', { ...payload, token });
+  // const token = window.localStorage.getItem('token');
+  // console.log('请求接口', { ...payload, token });
 
   // 读取配置
   // chrome.storage.sync.get({
@@ -76,10 +110,24 @@ async function handleQuery() {
 
 /**
  * 监听消息
- * 不管是在后台，还是在内容脚本中，我们都使用runtime.onMessage监听消息的接收事件，不同的是回调函数中的sender，标识不同的发送方
+ * 不管是在后台，还是在内容脚本中，我们都使用 runtime.onMessage 监听消息的接收事件，不同的是回调函数中的sender，标识不同的发送方
  */
- chrome.runtime.onMessage.addListener( function(request, sender, sendResponse) {
+chrome.runtime.onMessage.addListener( function(request, sender, sendResponse) {
   console.log('recevie message ', sender.tab ? "from a content script:" + sender.tab.url : "from the background script");
-  // if (request.greeting.indexOf("hello") !== -1){}
-  sendResponse({farewell: "goodbye"});
+  /**
+   * 在 qcc.com 下返回 cookie 和 tid
+   */
+  if (request.cmd === 'ask.qcc') {
+    const cookie = qcc.getCookie();
+    const tid = qcc.getTid();
+    const message = { cmd: request.cmd, payload: { cookie, tid }};
+    console.log('发送', message);
+    sendResponse(message);
+  } else if (request.cmd === 'answer.qcc') {
+    console.log('收取', request);
+    handleQuery();
+  } else {
+    sendResponse({ cmd: 'copy' }); 
+  }
+  return true;
 });

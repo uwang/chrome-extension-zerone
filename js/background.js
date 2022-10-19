@@ -9,21 +9,44 @@
  * background处于休眠状态，直到触发事件，然后执行指示的逻辑；一个好的background仅在需要时加载，并在空闲时卸载。
  */
 
-chrome.runtime.onInstalled.addListener(function (){
-  console.log("插件已被安装");
-  chrome.contextMenus.create({
-    id: "sampleContextMenu",
-    title: "Sample Context Menu",
-    contexts: ["selection"], // 只有当选中文字时才会出现此右键菜单
-  });
+const debug = false
 
-  chrome.cookies.getAll({ domain: '.qcc.com' }, function (cookies) {
-    const cookieList = [];
-    cookies.forEach(cookie => {
-      cookieList.push(cookie.name + ':' + cookie.value)
+chrome.runtime.onInstalled.addListener(function (){
+  debug && console.log("插件已被安装");
+  // chrome.contextMenus.create({
+  //   id: "sampleContextMenu",
+  //   title: "Sample Context Menu",
+  //   contexts: ["selection"], // 只有当选中文字时才会出现此右键菜单
+  // });
+});
+
+/**
+ * 监听消息
+ * 不管是在后台，还是在内容脚本中，我们都使用 runtime.onMessage 监听消息的接收事件，不同的是回调函数中的 sender，标识不同的发送方
+ */
+ chrome.runtime.onMessage.addListener( function(request, sender, sendResponse) {
+  const text = 'recevie message ' + (sender.tab ? "from a content script:" + sender.tab.url : "from the background script")
+  console.log(text, request);
+  if (request.cmd === 'ask.qcc') {
+    // console.log('sender.tab.id', sender.tab.id);
+    // 查找企查查的 tab
+    chrome.tabs.query({ url: 'https://www.qcc.com/*' }, function (tabs) {
+      if (!tabs.length) {
+        chrome.tabs.create({ url: 'https://www.qcc.com/' });
+      } else {
+        // 获取数据
+        const tab = tabs[0];
+        sendMessageToContentScript(tab.id, { cmd: request.cmd }, function (response) {
+          console.log('answer.qcc', response);
+          sendResponse(response);
+          // sendMessageToContentScript(sender.tab.id, { cmd: 'answer.qcc', payload: response });
+        })
+      }
     });
-    console.log('cookies', cookieList.join('; '))
-  });
+  } else {
+    console.warn('request.cmd', request.cmd);
+  }
+  return true;
 });
 
 let tag = '';
@@ -33,13 +56,18 @@ let tag = '';
  * @param {Object} message { cmd: '', payload: {}}
  * @param {*} callback 
  */
-function sendMessageToContentScript(message, callback) {
-  chrome.tabs.query({ active: true, currentWindow: true }, function (tabs) {
-    chrome.tabs.sendMessage(tabs[0].id, message, function (response) {
-      if (callback) callback(response);
-    });
+function sendMessageToContentScript(tabId, message, callback) {
+  chrome.tabs.sendMessage(tabId, message, function (response) {
+    if (callback) callback(response);
   });
 }
+// function sendMessageToContentScript(message, callback) {
+//   chrome.tabs.query({ active: true, currentWindow: true }, function (tabs) {
+//     chrome.tabs.sendMessage(tabs[0].id, message, function (response) {
+//       if (callback) callback(response);
+//     });
+//   });
+// }
 
 /**
  * 发送消息到 popup script
@@ -49,16 +77,6 @@ function sendMessageToPopup (message) {
   chrome.runtime.sendMessage(message);
 }
 
-/**
- * 监听消息
- * 不管是在后台，还是在内容脚本中，我们都使用runtime.onMessage监听消息的接收事件，不同的是回调函数中的sender，标识不同的发送方
- */
-chrome.runtime.onMessage.addListener( function(request, sender, sendResponse) {
-  const text = 'recevie message ' + (sender.tab ? "from a content script:" + sender.tab.url : "from the background script")
-  console.log(text, request);
-  // if (request.greeting.indexOf("hello") !== -1){}
-  sendResponse({ farewell: "goodbye" });
-});
 // chrome.runtime.onMessage.addListener(function (message, sender, sendResponse) {
 //   console.log('sender', sender);
 //   console.log('sender.tab', sender.tab);
@@ -83,7 +101,7 @@ chrome.runtime.onMessage.addListener( function(request, sender, sendResponse) {
 // });
 
 async function handleStore(tabId, payload) {
-  console.log('handleStore', payload);
+  debug && console.log('handleStore', payload);
   // const tab = await getCurrentTab();
   // console.log('tab', tab);
   const failList = payload.list.filter(function (item) {
@@ -100,7 +118,7 @@ async function handleStore(tabId, payload) {
   const key = 'zdeal.' + tabId
   const value = JSON.stringify(payload)
   data[key] = JSON.stringify(payload)
-  console.log('local.set', data);
+  debug && console.log('local.set', data);
   return chrome.storage.local.set(data, function() {
     console.log(key + ' is set to ', value);
   });
@@ -109,9 +127,9 @@ async function handleStore(tabId, payload) {
 async function handleQuery () {
   const tab = await getCurrentTab();
   const key = 'zdeal.' + tab.id;
-  console.log('get.key:', key);
+  debug && console.log('get.key:', key);
   chrome.storage.local.get(key, function (data) {
-    console.log('storage.local.get', data);
+    debug && console.log('storage.local.get', data);
     chrome.runtime.sendMessage({ cmd: 'query', payload: data[key] });
   });
 }
@@ -121,7 +139,7 @@ async function handleQuery () {
  */
 chrome.tabs.onActivated.addListener(async function (activeInfo) {
   const tab = await getCurrentTab();
-  console.log('监听 tab 切换', tab.url);
+  debug && console.log('监听 tab 切换', tab.url);
   // 从 tab.url 中解析 host
   const uri = tab.url ? new URL(tab.url) : { host: '' }
   const suffix = uri && uri.host.endsWith('zdeal.com.cn') ? '' : '-gray'
@@ -133,11 +151,11 @@ chrome.tabs.onActivated.addListener(async function (activeInfo) {
   // console.log('activeInfo', activeInfo);
   // console.log('change tab', activeInfo.tabId);
   const key = 'zdeal.' + activeInfo.tabId;
-  console.log('key', key);
+  debug && console.log('key', key);
   chrome.storage.local.get(key, function(data) {
-    console.log('onActivated get storage', data);
+    debug && console.log('onActivated get storage', data);
     if (data.hasOwnProperty('list')) {
-      console.log('onActivated get storage data.list', data.list);
+      debug && console.log('onActivated get storage data.list', data.list);
     }
   });
 });
@@ -150,7 +168,7 @@ async function getCurrentTab() {
 
 chrome.storage.onChanged.addListener(function (changes, namespace) {
   for (let [key, { oldValue, newValue }] of Object.entries(changes)) {
-    console.log(
+    debug && console.log(
       `Storage key "${key}" in namespace "${namespace}" changed.`,
       `Old value was "${oldValue}", new value is "${newValue}".`
     );

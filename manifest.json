@@ -8,16 +8,6 @@
     "48": "img/48.png",
     "128": "img/128.png"
   },
-  "permissions": [
-    "contextMenus",
-    "tabs",
-    "storage",
-    "cookies"
-  ],
-  "host_permissions": ["<all_urls>"],
-  "background": {
-    "service_worker": "js/background.js"
-  },
   "action": {
     "default_icon": {
       "16": "img/16-gray.png",
@@ -28,17 +18,28 @@
     "default_popup": "html/popup.html"
   },
   "options_page": "html/options.html",
+  "permissions": [
+    "contextMenus",
+    "tabs",
+    "storage",
+    "cookies"
+  ],
+  "host_permissions": ["<all_urls>"],
+  "background": {
+    "service_worker": "js/background.js"
+  },
   "content_scripts": [
     {
       "matches": [
         "http://*.zdeal.com.cn/info/*",
-        "https://*.zdeal.com.cn/info/*"
+        "https://*.zdeal.com.cn/info/*",
+        "https://www.qcc.com/*"
       ],
       "js": [
         "js/jquery-3.6.0.min.js",
         "js/content.js"
       ],
-      "run_at": "document_end"
+      "run_at": "document_idle"
     }
   ]
 }
