@@ -28,6 +28,29 @@ const qcc = {
 }
 
 /**
+ * zdeal 操作
+ */
+const zdeal = {
+  getEntityName: function () {
+    const collections = document.getElementsByClassName("company");
+    return collections[0] ? collections[0].innerText : '';
+  },
+  getEntityInfo: function () {
+    // http://test.zdeal.com.cn/info/fund/100010324940
+    // "/info/fund/100010324940"
+    const list = /\/(\w+)\/(\d+)/.exec(location.pathname);
+    const entityType = list[1];
+    const entityId = list[2];
+    return { entityType, entityId };
+  },
+  handleQuery: async function (payload) {
+    const entityName = this.getEntityName();
+    const { entityId, entityType } = this.getEntityInfo();
+    console.log('请求接口', { entityName, entityId, entityType, ...payload });
+  }
+}
+
+/**
  * 发送消息到后台
  * @param {Object} message { cmd: '', payload: {}}
  * @param {Function} callback 
@@ -40,37 +63,43 @@ function sendMessageToBackground (message, callback) {
 
 /**
  * 页面初始化
+ * zdeal.com.cn 的 content script 发送 entityName 消息给 background
+ * background 发送消息给 qcc.com 的 content script，让其返回 cookie 和 tid
+ * background 拿着 entityName cookie 和 tid，调用后台接口，拿到 url
+ * background 请求 url 将响应发送给后台爬虫接口，返回结果给 zdeal.com.cn
  */
 $(function() {
   if (window.location.href.includes('zdeal.com.cn')) {
-    const message = { cmd: 'ask.qcc' };
-    sendMessageToBackground(message, function (response) {
-      console.log('请求 qcc.com 数据', response);
-    });
+    setTimeout(function () {
+      const entityName = zdeal.getEntityName();
+      const message = { cmd: 'ask.qcc', payload: { entityName } };
+      sendMessageToBackground(message, function (response) {
+        console.log('请求 qcc.com 数据', response);
+        if (response) {
+          console.log('response', response);
+          // zdeal.handleQuery(response.payload);
+        }
+      });
+    }, 1000);
   }
 });
 
 /**
  * 处理基金详情页
  */
-async function handleQuery() {
-  console.log('请求接口');
-  // let entityName
-  // try {
-  //   entityName = document.getElementsByClassName("company")[0].innerText;
-  // } catch (err) {
-  //   console.error(err)
-  // }
-  // if (!entityName) {
-  //   console.warn('浏览器插件初始化失败');
-  //   return;
-  // }
-
-  // // http://test.zdeal.com.cn/info/fund/100010324940
-  // // "/info/fund/100010324940"
-  // const list = /\/(\w+)\/(\d+)/.exec(location.pathname);
-  // const entityType = list[1];
-  // const entityId = list[2];
+async function handleQuery(payload) {
+  console.log('请求接口', payload);
+  let entityName
+  try {
+    console.log(document.getElementsByClassName("company"));
+    entityName = document.getElementsByClassName("company")[0].innerText;
+  } catch (err) {
+    console.error(err)
+  }
+  if (!entityName) {
+    console.warn('浏览器插件初始化失败');
+    return;
+  }
 
   // const payload = {
   //   entityId,
@@ -123,11 +152,10 @@ chrome.runtime.onMessage.addListener( function(request, sender, sendResponse) {
     const message = { cmd: request.cmd, payload: { cookie, tid }};
     console.log('发送', message);
     sendResponse(message);
-  } else if (request.cmd === 'answer.qcc') {
-    console.log('收取', request);
-    handleQuery();
   } else {
     sendResponse({ cmd: 'copy' }); 
   }
+
+  // 异步支持
   return true;
 });

@@ -33,19 +33,21 @@ chrome.runtime.onInstalled.addListener(function (){
     chrome.tabs.query({ url: 'https://www.qcc.com/*' }, function (tabs) {
       if (!tabs.length) {
         chrome.tabs.create({ url: 'https://www.qcc.com/' });
+        sendResponse();
       } else {
         // 获取数据
         const tab = tabs[0];
         sendMessageToContentScript(tab.id, { cmd: request.cmd }, function (response) {
           console.log('answer.qcc', response);
           sendResponse(response);
-          // sendMessageToContentScript(sender.tab.id, { cmd: 'answer.qcc', payload: response });
         })
       }
     });
   } else {
     console.warn('request.cmd', request.cmd);
   }
+
+  // 异步支持
   return true;
 });
 

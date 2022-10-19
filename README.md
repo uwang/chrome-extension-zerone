@@ -54,13 +54,13 @@ https://segmentfault.com/a/1190000040837837
 ## 接口定义
 
 1.请求接口：
-    url='https://fusion.zdeal.com.cn/server_v2/select'
+    url='http://fusion.zdeal.com.cn/server_v2/select'
     method='post'
     data = {
 		"company_name": company_name #必须 ,str类型
-		"response": response #非必须，字典类型
 		"init_window_tid": init_window_tid #必须,str类型
 		"cookie": qcc_cookie #必须 ，str类型
+        "response": response #非必须，字典类型
     }
 2.返回值：
     {'code': code, 'msg': msg, 'data': {},'request_info':{'url':'',}}
@@ -87,7 +87,7 @@ https://segmentfault.com/a/1190000040837837
 3.其他说明：
   循环请求接口，200，400循环break，300继续请求fusion，500请求企查查，并将企查查response作为参数继续请求fusion
   参数init_window_tid获取：
-    企查查首页全局搜window.__INITIAL_STATE__=即可找到。
+    企查查首页全局搜 window.tid 即可找到。
   参数cookie:
     全部cookie，字符串形式
 
