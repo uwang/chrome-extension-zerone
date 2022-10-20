@@ -60,10 +60,19 @@ async function crawlPage (url, headers) {
   return result;
 }
 
+/**
+ * 获取对比报告链接
+ * @param {Object} data1 接口返回值
+ * @param {String} api_url 
+ * @param {FormData} formData 
+ * @returns String
+ */
 async function fetchReport (data1, api_url, formData) {
   const temp = await crawlPage(data1.request_info.url, data1.request_info.headers);
   console.log('Step3-2.response', temp);
   formData.append('response', JSON.stringify(temp));
+
+  let report_url;
 
   // 轮询查询 10 次，间隔 1秒
   let i = 10;
@@ -80,6 +89,7 @@ async function fetchReport (data1, api_url, formData) {
     if (result.code === 200) {
       i = 0;
       run = false;
+      report_url = result.data[2];
       console.log('End', result);
     }
     if (result.code === 300) {
@@ -91,10 +101,12 @@ async function fetchReport (data1, api_url, formData) {
       i = 0;
     }
     if (result.code === 500) {
-      fetchReport(result, api_url, formData);
+      report_url = await fetchReport(result, api_url, formData);
       i = 0;
     }
   } while (i > 1);
+
+  return report_url;
 }
 
 /**
@@ -112,8 +124,10 @@ async function fetchReport (data1, api_url, formData) {
         chrome.tabs.create({ url: 'https://www.qcc.com/' });
         sendResponse();
       } else {
-        // 获取数据
+        // 获取 report-url 后，返回给 sender
         const tab = tabs[0];
+
+        // 向 qcc.com 请求数据
         sendMessageToContentScript(tab.id, { cmd: request.cmd }, async function (response) {
           console.log('answer.qcc', response);
           if (response) {
@@ -133,18 +147,18 @@ async function fetchReport (data1, api_url, formData) {
             if (data1.code === 500) {
               console.log('Step3-1', data1);
               // 请求 qcc 链接
-              fetchReport(data1, api_url, formData);
+              const report_url = await fetchReport(data1, api_url, formData);
+              sendResponse({ url: report_url });
             }
             // 已经生成好报告了，直接输出
             if (data1.code === 200) {
-              // data1.data[8];
               run = false;
+              sendResponse({ url: data1.data[2] });
               console.log('End', data1);
             }
-
           }
-          sendResponse(response);
-        })
+        });
+        return true;
       }
     });
   } else {

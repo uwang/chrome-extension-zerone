@@ -20,9 +20,16 @@ const qcc = {
    * 从脚本内容中提取 tid
    */
   getTid: function () {
-    // "window.pid='bfb9eff9a02efeff6053cbb16a7fe922'; window.tid='495ff49955f918b679cedac9ab064908'"
-    const content = window.document.scripts[3].text;
-    const tid = /window.tid='(\w+)'/g.exec(content)[1];
+    let tid;
+    const scripts = window.document.scripts;
+    for (var i = 0; i < scripts.length; i++ ){
+      // "window.pid='bfb9eff9a02efeff6053cbb16a7fe922'; window.tid='495ff49955f918b679cedac9ab064908'"
+      const mathed = /window.tid='(\w+)'/g.exec(scripts[i].text);
+      // console.log('mathed', mathed);
+      if (mathed) {
+        tid = mathed[1];
+      }
+    }
     return tid;
   }
 }
@@ -75,10 +82,7 @@ $(function() {
       if (entityName) {
         const message = { cmd: 'ask.qcc', payload: { entityName } };
         sendMessageToBackground(message, function (response) {
-          console.log('请求 qcc.com 数据', response);
-          if (response) {
-            console.log('response', response);
-          }
+          console.log('请求 qcc.com 数据 response', response);
         });
       } else {
         console.warn('未取到 entityName');
@@ -156,7 +160,7 @@ chrome.runtime.onMessage.addListener( function(request, sender, sendResponse) {
     console.log('发送', message);
     sendResponse(message);
   } else {
-    sendResponse({ cmd: 'copy' }); 
+    sendResponse({ cmd: 'copy' });
   }
 
   // 异步支持
