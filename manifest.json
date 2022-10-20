@@ -31,8 +31,8 @@
   "content_scripts": [
     {
       "matches": [
-        "http://*.zdeal.com.cn/info/*",
-        "https://*.zdeal.com.cn/info/*",
+        "http://*.zdeal.com.cn/info/fund/*",
+        "https://*.zdeal.com.cn/info/fund/*",
         "https://www.qcc.com/*"
       ],
       "js": [

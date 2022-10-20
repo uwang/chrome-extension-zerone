@@ -21,6 +21,20 @@ chrome.runtime.onInstalled.addListener(function (){
 });
 
 /**
+ * 等待时间
+ * @param {Number} ms 毫秒
+ * @returns 
+ */
+function sleep(ms) {
+  return new Promise(resolve => setTimeout(resolve, ms));
+}
+
+function getRandomArbitrary(min, max) {
+  return Math.random() * (max - min) + min;
+}
+
+
+/**
  * 监听消息
  * 不管是在后台，还是在内容脚本中，我们都使用 runtime.onMessage 监听消息的接收事件，不同的是回调函数中的 sender，标识不同的发送方
  */
@@ -39,6 +53,82 @@ chrome.runtime.onInstalled.addListener(function (){
         const tab = tabs[0];
         sendMessageToContentScript(tab.id, { cmd: request.cmd }, function (response) {
           console.log('answer.qcc', response);
+          if (response) {
+            const payload = response.payload;
+
+            const api_url = 'http://fusion.zdeal.com.cn/server_v2/select';
+            // const data = {
+            //   company_name: request.payload.entityName,
+            //   cookie: response.payload.cookie,
+            //   init_window_tid: response.payload.tid
+            // }
+
+            const formData = new FormData();
+            formData.append('company_name', request.payload.entityName);
+            formData.append('cookie', response.payload.cookie);
+            formData.append('init_window_tid', response.payload.tid);
+
+            // 获取 qcc 链接地址
+            fetch(api_url, { method: 'POST', body: formData })
+              .then((response) => response.json())
+              .then(async function (result) {
+                console.log('Step1', result);
+                // 启动爬取流程
+                if (result.code === 500) {
+                  const second = getRandomArbitrary(7, 15);
+                  console.log('等待 ' + second + ' 秒');
+                  await sleep(second * 1000);
+                  // 请求 qcc 链接
+                  const qcc_url = result.request_info.url
+                  const response = await fetch(qcc_url, { method: 'GET', headers: result.request_info.headers })
+
+                  const statusText = response.statusText;
+                  const status = response.status;
+                  const text = await response.text()
+                  console.log('Step2.statusText', statusText);
+                  console.log('Step2.status', status);
+                  console.log('Step2.text', text);
+
+                  const temp = {
+                    'reason': statusText,
+                    'status_code': status,
+                    'url': qcc_url,
+                    'text': text
+                  };
+                  console.log('response', temp);
+                  formData.append('response', JSON.stringify(temp));
+
+                  // 轮询查询 10 次，间隔 1秒？
+                  let i = 10;
+                  do {
+                    // 请求爬虫处理 qcc 文件
+                    const response = await fetch(api_url, { method: 'POST', body: formData });
+                    const statusText = response.statusText;
+                    const status = response.status;
+                    const reault = await response.json();
+                    console.log('Step3', { statusText, status, reault });
+                    // 200 出结果；
+                    // 300 任务执行中；
+                    // 400 任务执行失败；
+                    if (reault.code === 200) {
+                      i = 0;
+                      console.log('End', result);
+                    }
+                    if (reault.code === 300) {
+                      i -= 1;
+                      await sleep(1800);
+                    }
+                    if (reault.code === 400) {
+                      i = 0;
+                    }
+                  } while (i > 1);
+                }
+                // 已经生成好报告了，直接输出
+                if (result.code === 200) {
+                  result.data[8];
+                }
+              });
+          }
           sendResponse(response);
         })
       }
