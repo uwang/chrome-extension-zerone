@@ -33,6 +33,69 @@ function getRandomArbitrary(min, max) {
   return Math.random() * (max - min) + min;
 }
 
+/**
+ * 请求页面
+ * @param {String} url 爬取的 url
+ * @param {Object} header 请求 headers
+ * @returns 
+ */
+async function crawlPage (url, headers) {
+  // 随机等待 7-15 秒
+  const second = getRandomArbitrary(7, 15);
+  console.log('等待 ' + second + ' 秒');
+  await sleep(second * 1000);
+
+  // 发起请求
+  const response = await fetch(url, { method: 'GET', headers });
+  const statusText = response.statusText;
+  const status = response.status;
+  const text = await response.text();
+
+  const result = {
+    'reason': statusText,
+    'status_code': status,
+    'url': url,
+    'text': text
+  };
+  return result;
+}
+
+async function fetchReport (data1, api_url, formData) {
+  const temp = await crawlPage(data1.request_info.url, data1.request_info.headers);
+  console.log('Step3-2.response', temp);
+  formData.append('response', JSON.stringify(temp));
+
+  // 轮询查询 10 次，间隔 1秒
+  let i = 10;
+  do {
+    // 请求爬虫处理 qcc 文件
+    const response3 = await fetch(api_url, { method: 'POST', body: formData });
+    const statusText = response3.statusText;
+    const status = response3.status;
+    const result = await response3.json();
+    console.log('Step3-3', { statusText, status, result });
+    // 200 出结果；
+    // 300 任务执行中；
+    // 400 任务执行失败；
+    if (result.code === 200) {
+      i = 0;
+      run = false;
+      console.log('End', result);
+    }
+    if (result.code === 300) {
+      i -= 1;
+      await sleep(1800);
+    }
+    if (result.code === 400) {
+      run = false;
+      i = 0;
+    }
+    if (result.code === 500) {
+      fetchReport(result, api_url, formData);
+      i = 0;
+    }
+  } while (i > 1);
+}
 
 /**
  * 监听消息
@@ -51,83 +114,34 @@ function getRandomArbitrary(min, max) {
       } else {
         // 获取数据
         const tab = tabs[0];
-        sendMessageToContentScript(tab.id, { cmd: request.cmd }, function (response) {
+        sendMessageToContentScript(tab.id, { cmd: request.cmd }, async function (response) {
           console.log('answer.qcc', response);
           if (response) {
             const payload = response.payload;
 
             const api_url = 'http://fusion.zdeal.com.cn/server_v2/select';
-            // const data = {
-            //   company_name: request.payload.entityName,
-            //   cookie: response.payload.cookie,
-            //   init_window_tid: response.payload.tid
-            // }
-
             const formData = new FormData();
             formData.append('company_name', request.payload.entityName);
             formData.append('cookie', response.payload.cookie);
             formData.append('init_window_tid', response.payload.tid);
 
             // 获取 qcc 链接地址
-            fetch(api_url, { method: 'POST', body: formData })
-              .then((response) => response.json())
-              .then(async function (result) {
-                console.log('Step1', result);
-                // 启动爬取流程
-                if (result.code === 500) {
-                  const second = getRandomArbitrary(7, 15);
-                  console.log('等待 ' + second + ' 秒');
-                  await sleep(second * 1000);
-                  // 请求 qcc 链接
-                  const qcc_url = result.request_info.url
-                  const response = await fetch(qcc_url, { method: 'GET', headers: result.request_info.headers })
+            const response1 = await fetch(api_url, { method: 'POST', body: formData });
+            const data1 = await response1.json();
 
-                  const statusText = response.statusText;
-                  const status = response.status;
-                  const text = await response.text()
-                  console.log('Step2.statusText', statusText);
-                  console.log('Step2.status', status);
-                  console.log('Step2.text', text);
+            // 启动爬取流程
+            if (data1.code === 500) {
+              console.log('Step3-1', data1);
+              // 请求 qcc 链接
+              fetchReport(data1, api_url, formData);
+            }
+            // 已经生成好报告了，直接输出
+            if (data1.code === 200) {
+              // data1.data[8];
+              run = false;
+              console.log('End', data1);
+            }
 
-                  const temp = {
-                    'reason': statusText,
-                    'status_code': status,
-                    'url': qcc_url,
-                    'text': text
-                  };
-                  console.log('response', temp);
-                  formData.append('response', JSON.stringify(temp));
-
-                  // 轮询查询 10 次，间隔 1秒？
-                  let i = 10;
-                  do {
-                    // 请求爬虫处理 qcc 文件
-                    const response = await fetch(api_url, { method: 'POST', body: formData });
-                    const statusText = response.statusText;
-                    const status = response.status;
-                    const reault = await response.json();
-                    console.log('Step3', { statusText, status, reault });
-                    // 200 出结果；
-                    // 300 任务执行中；
-                    // 400 任务执行失败；
-                    if (reault.code === 200) {
-                      i = 0;
-                      console.log('End', result);
-                    }
-                    if (reault.code === 300) {
-                      i -= 1;
-                      await sleep(1800);
-                    }
-                    if (reault.code === 400) {
-                      i = 0;
-                    }
-                  } while (i > 1);
-                }
-                // 已经生成好报告了，直接输出
-                if (result.code === 200) {
-                  result.data[8];
-                }
-              });
           }
           sendResponse(response);
         })

@@ -72,15 +72,18 @@ $(function() {
   if (window.location.href.includes('zdeal.com.cn')) {
     setTimeout(function () {
       const entityName = zdeal.getEntityName();
-      const message = { cmd: 'ask.qcc', payload: { entityName } };
-      sendMessageToBackground(message, function (response) {
-        console.log('请求 qcc.com 数据', response);
-        if (response) {
-          console.log('response', response);
-          // zdeal.handleQuery(response.payload);
-        }
-      });
-    }, 1000);
+      if (entityName) {
+        const message = { cmd: 'ask.qcc', payload: { entityName } };
+        sendMessageToBackground(message, function (response) {
+          console.log('请求 qcc.com 数据', response);
+          if (response) {
+            console.log('response', response);
+          }
+        });
+      } else {
+        console.warn('未取到 entityName');
+      }
+    }, 2000);
   }
 });
 
