@@ -76,39 +76,37 @@ function sendMessageToBackground (message, callback) {
  * background 拿着 entityName cookie 和 tid，调用后台接口，拿到 url
  * background 请求 url 将响应发送给后台爬虫接口，返回结果给 zdeal.com.cn
  */
-function init () {
-  if (window.location.href.includes('zdeal.com.cn')) {
-    const span = document.createElement('span');
-    span.id = 'realtime-diff-anchor';
-    span.style = 'margin-left: 10px;padding: 0 10px;';
-    span.appendChild(document.createTextNode('实时对比中……'));
-    document.querySelector('.entity-list').appendChild(span);
+function initForZdeal () {
+  const anchor_id = 'realtime-diff-anchor';
+  const span = document.createElement('span');
+  span.id = anchor_id;
+  span.style = 'margin-left: 10px;padding: 0 10px;';
+  span.appendChild(document.createTextNode('实时对比中……'));
+  document.querySelector('.entity-list').appendChild(span);
 
-    // 获取基金名称
-    const entityName = zdeal.getEntityName();
-    if (entityName) {
-      const message = { cmd: 'ask.qcc', payload: { entityName } };
-      sendMessageToBackground(message, function (response) {
-        console.log('请求 qcc.com 数据 response', response);
-        if (response && response.url) {
-          const anchor = document.querySelector('#realtime-diff-anchor');
-          anchor.parentNode.removeChild(anchor);
+  // 获取基金名称
+  const entityName = zdeal.getEntityName();
+  if (entityName) {
+    const message = { cmd: 'ask.qcc', payload: { entityName } };
+    sendMessageToBackground(message, function (response) {
+      console.log('请求 qcc.com 数据 response', response);
+      if (response && response.url) {
+        const anchor = document.querySelector('#' + anchor_id);
+        anchor.parentNode.removeChild(anchor);
 
-          const a = document.createElement('a');
-          a.href = response.url;
-          a.target = '_blank';
-          a.style = 'margin-left: 10px;padding: 0 10px;';
-          a.className = 'entity';
-          a.appendChild(document.createTextNode('实时对比报告'));
-          document.querySelector('.entity-list').appendChild(a);
-        } else {
-          document.querySelector('#realtime-diff-anchor').textContent = '实时对比失败';
-        }
-      });
-    } else {
-      document.querySelector('#realtime-diff-anchor').textContent = '请刷新页面';
-      console.warn('未取到 entityName');
-    }
+        const a = document.createElement('a');
+        a.href = response.url;
+        a.target = '_blank';
+        a.style = 'margin-left: 10px;padding: 0 10px;';
+        a.className = 'entity';
+        a.appendChild(document.createTextNode('实时对比报告'));
+        document.querySelector('.entity-list').appendChild(a);
+      } else {
+        document.querySelector('#' + anchor_id).textContent = '实时对比失败';
+      }
+    });
+  } else {
+    document.querySelector('#' + anchor_id).textContent = '请刷新页面';
   }
 }
 
@@ -135,16 +133,22 @@ chrome.runtime.onMessage.addListener( function(request, sender, sendResponse) {
   return true;
 });
 
-window.addEventListener ("load", myMain, false);
-function myMain (evt) {
-  var jsInitChecktimer = setInterval (checkForJS_Finish, 200);
-
+window.addEventListener ("load", function (evt) {
   function checkForJS_Finish () {
-      if (document.getElementsByClassName("company")[0]) {
-        clearInterval (jsInitChecktimer);
+    if (window.location.href.includes('zdeal.com.cn')) {
+      const entityNameElement = document.getElementsByClassName("company")[0];
+      if (entityNameElement !== undefined && entityNameElement.innerText.length) {
+        console.log('entityName', entityNameElement.innerText);
 
+        clearInterval (jsInitChecktimer);
+    
         // DO YOUR STUFF HERE.
-        init();
+        initForZdeal();
+      } else {
+        console.log('wait for entityName');
       }
+    }
   }
-}
+
+  var jsInitChecktimer = setInterval(checkForJS_Finish, 200);
+}, false);
