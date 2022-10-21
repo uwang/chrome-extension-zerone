@@ -131,8 +131,6 @@ async function fetchReport (data1, api_url, formData) {
         sendMessageToContentScript(tab.id, { cmd: request.cmd }, async function (response) {
           console.log('answer.qcc', response);
           if (response) {
-            const payload = response.payload;
-
             const api_url = 'http://fusion.zdeal.com.cn/server_v2/select';
             const formData = new FormData();
             formData.append('company_name', request.payload.entityName);
@@ -152,7 +150,6 @@ async function fetchReport (data1, api_url, formData) {
             }
             // 已经生成好报告了，直接输出
             if (data1.code === 200) {
-              run = false;
               sendResponse({ url: data1.data[8] });
               console.log('End', data1);
             }

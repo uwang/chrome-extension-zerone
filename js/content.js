@@ -78,22 +78,34 @@ function sendMessageToBackground (message, callback) {
 $(function() {
   if (window.location.href.includes('zdeal.com.cn')) {
     setTimeout(function () {
+      const span = document.createElement('span');
+      span.id = 'realtime-diff-anchor';
+      span.style = 'margin-left: 10px;padding: 0 10px;';
+      span.appendChild(document.createTextNode('实时对比中'));
+      document.querySelector('.entity-list').appendChild(span);
+
       const entityName = zdeal.getEntityName();
       if (entityName) {
         const message = { cmd: 'ask.qcc', payload: { entityName } };
         sendMessageToBackground(message, function (response) {
           console.log('请求 qcc.com 数据 response', response);
           if (response && response.url) {
+            const anchor = document.querySelector('#realtime-diff-anchor');
+            anchor.parentNode.removeChild(anchor);
+
             const a = document.createElement('a');
             a.href = response.url;
             a.target = '_blank';
-            a.className = 'entity';
             a.style = 'margin-left: 10px;padding: 0 10px;';
+            a.className = 'entity';
             a.appendChild(document.createTextNode('实时对比报告'));
             document.querySelector('.entity-list').appendChild(a);
+          } else {
+            document.querySelector('#realtime-diff-anchor').textContent = '实时对比失败';
           }
         });
       } else {
+        document.querySelector('#realtime-diff-anchor').textContent = '实时对比失败，请刷新页面重试';
         console.warn('未取到 entityName');
       }
     }, 2000);
