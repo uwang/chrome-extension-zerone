@@ -41,9 +41,11 @@ function getRandomArbitrary(min, max) {
  */
 async function crawlPage (url, headers) {
   // 随机等待 7-15 秒
-  const second = getRandomArbitrary(7, 15);
-  console.log('等待 ' + second + ' 秒');
-  await sleep(second * 1000);
+  if (url.includes('/touzilist')) {
+    const second = getRandomArbitrary(7, 15);
+    console.log('对外投资需要随机等待 ' + second + ' 秒');
+    await sleep(second * 1000);
+  }
 
   // 发起请求
   const response = await fetch(url, { method: 'GET', headers });
