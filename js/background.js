@@ -127,33 +127,42 @@ async function fetchReport (data1, api_url, formData) {
         // 获取 report-url 后，返回给 sender
         const tab = tabs[0];
 
-        // 向 qcc.com 请求数据
-        sendMessageToContentScript(tab.id, { cmd: request.cmd }, async function (response) {
-          console.log('answer.qcc', response);
-          if (response) {
-            const api_url = 'http://fusion.zdeal.com.cn/server_v2/select';
-            const formData = new FormData();
-            formData.append('company_name', request.payload.entityName);
-            formData.append('cookie', response.payload.cookie);
-            formData.append('init_window_tid', response.payload.tid);
+        chrome.cookies.getAll({ domain: '.qcc.com' }, function (cookies) {
+          const cookieList = [];
+          cookies.forEach(cookie => {
+            cookieList.push(cookie.name + ':' + cookie.value);
+          });
+          const cookieStr = cookieList.join('; ');
+          console.log('cookies', cookieStr);
 
-            // 获取 qcc 链接地址
-            const response1 = await fetch(api_url, { method: 'POST', body: formData });
-            const data1 = await response1.json();
-
-            // 启动爬取流程
-            if (data1.code === 500) {
-              console.log('Step3-1', data1);
-              // 请求 qcc 链接
-              const report_url = await fetchReport(data1, api_url, formData);
-              sendResponse({ url: report_url });
+          // 向 qcc.com 请求数据
+          sendMessageToContentScript(tab.id, { cmd: request.cmd }, async function (response) {
+            console.log('answer.qcc', response);
+            if (response) {
+              const api_url = 'http://fusion.zdeal.com.cn/server_v2/select';
+              const formData = new FormData();
+              formData.append('company_name', request.payload.entityName);
+              formData.append('cookie', cookieStr);
+              formData.append('init_window_tid', response.payload.tid);
+  
+              // 获取 qcc 链接地址
+              const response1 = await fetch(api_url, { method: 'POST', body: formData });
+              const data1 = await response1.json();
+  
+              // 启动爬取流程
+              if (data1.code === 500) {
+                console.log('Step3-1', data1);
+                // 请求 qcc 链接
+                const report_url = await fetchReport(data1, api_url, formData);
+                sendResponse({ url: report_url });
+              }
+              // 已经生成好报告了，直接输出
+              if (data1.code === 200) {
+                sendResponse({ url: data1.data[8] });
+                console.log('End', data1);
+              }
             }
-            // 已经生成好报告了，直接输出
-            if (data1.code === 200) {
-              sendResponse({ url: data1.data[8] });
-              console.log('End', data1);
-            }
-          }
+          });
         });
         return true;
       }
