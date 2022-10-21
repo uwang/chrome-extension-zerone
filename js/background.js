@@ -89,7 +89,7 @@ async function fetchReport (data1, api_url, formData) {
     if (result.code === 200) {
       i = 0;
       run = false;
-      report_url = result.data[2];
+      report_url = result.data[8];
       console.log('End', result);
     }
     if (result.code === 300) {
@@ -153,7 +153,7 @@ async function fetchReport (data1, api_url, formData) {
             // 已经生成好报告了，直接输出
             if (data1.code === 200) {
               run = false;
-              sendResponse({ url: data1.data[2] });
+              sendResponse({ url: data1.data[8] });
               console.log('End', data1);
             }
           }
