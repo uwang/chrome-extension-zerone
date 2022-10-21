@@ -5,6 +5,7 @@
 
 window.console.log("content js loaded");
 
+
 /**
  * qcc.com 的 content script 主要就是返回 cookie 和 tid
  */
@@ -71,98 +72,44 @@ function sendMessageToBackground (message, callback) {
 /**
  * 页面初始化
  * zdeal.com.cn 的 content script 发送 entityName 消息给 background
- * background 发送消息给 qcc.com 的 content script，让其返回 cookie 和 tid
+ * background 发送消息给 qcc.com 的 content script，让其返回 tid
  * background 拿着 entityName cookie 和 tid，调用后台接口，拿到 url
  * background 请求 url 将响应发送给后台爬虫接口，返回结果给 zdeal.com.cn
  */
-$(function() {
+function init () {
   if (window.location.href.includes('zdeal.com.cn')) {
-    setTimeout(function () {
-      const span = document.createElement('span');
-      span.id = 'realtime-diff-anchor';
-      span.style = 'margin-left: 10px;padding: 0 10px;';
-      span.appendChild(document.createTextNode('实时对比中'));
-      document.querySelector('.entity-list').appendChild(span);
+    const span = document.createElement('span');
+    span.id = 'realtime-diff-anchor';
+    span.style = 'margin-left: 10px;padding: 0 10px;';
+    span.appendChild(document.createTextNode('实时对比中……'));
+    document.querySelector('.entity-list').appendChild(span);
 
-      const entityName = zdeal.getEntityName();
-      if (entityName) {
-        const message = { cmd: 'ask.qcc', payload: { entityName } };
-        sendMessageToBackground(message, function (response) {
-          console.log('请求 qcc.com 数据 response', response);
-          if (response && response.url) {
-            const anchor = document.querySelector('#realtime-diff-anchor');
-            anchor.parentNode.removeChild(anchor);
+    // 获取基金名称
+    const entityName = zdeal.getEntityName();
+    if (entityName) {
+      const message = { cmd: 'ask.qcc', payload: { entityName } };
+      sendMessageToBackground(message, function (response) {
+        console.log('请求 qcc.com 数据 response', response);
+        if (response && response.url) {
+          const anchor = document.querySelector('#realtime-diff-anchor');
+          anchor.parentNode.removeChild(anchor);
 
-            const a = document.createElement('a');
-            a.href = response.url;
-            a.target = '_blank';
-            a.style = 'margin-left: 10px;padding: 0 10px;';
-            a.className = 'entity';
-            a.appendChild(document.createTextNode('实时对比报告'));
-            document.querySelector('.entity-list').appendChild(a);
-          } else {
-            document.querySelector('#realtime-diff-anchor').textContent = '实时对比失败';
-          }
-        });
-      } else {
-        document.querySelector('#realtime-diff-anchor').textContent = '实时对比失败，请刷新页面重试';
-        console.warn('未取到 entityName');
-      }
-    }, 2000);
+          const a = document.createElement('a');
+          a.href = response.url;
+          a.target = '_blank';
+          a.style = 'margin-left: 10px;padding: 0 10px;';
+          a.className = 'entity';
+          a.appendChild(document.createTextNode('实时对比报告'));
+          document.querySelector('.entity-list').appendChild(a);
+        } else {
+          document.querySelector('#realtime-diff-anchor').textContent = '实时对比失败';
+        }
+      });
+    } else {
+      document.querySelector('#realtime-diff-anchor').textContent = '请刷新页面';
+      console.warn('未取到 entityName');
+    }
   }
-});
-
-/**
- * 处理基金详情页
- */
-async function handleQuery(payload) {
-  console.log('请求接口', payload);
-  let entityName
-  try {
-    console.log(document.getElementsByClassName("company"));
-    entityName = document.getElementsByClassName("company")[0].innerText;
-  } catch (err) {
-    console.error(err)
-  }
-  if (!entityName) {
-    console.warn('浏览器插件初始化失败');
-    return;
-  }
-
-  // const payload = {
-  //   entityId,
-  //   entityType,
-  //   entityName,
-  // };
-
-  // const token = window.localStorage.getItem('token');
-  // console.log('请求接口', { ...payload, token });
-
-  // 读取配置
-  // chrome.storage.sync.get({
-  //   webHost: "https://zdeal.com.cn",
-  //   apiHost: 'https://smart.zdeal.com.cn',
-  //   username: 'xxx',
-  //   password: 'yyy',
-  // }, function(items) {
-  //   // document.getElementById('username').value = items.username;
-  //   // document.getElementById('password').value = items.password;
-  //   $.ajax({
-  //     url: `${items.apiHost}/api/staticdata`,
-  //     method: 'post',
-  //     data: {
-  //       ...payload,
-  //       username: items.username,
-  //       password: items.password,
-  //       webHost: items.webHost,
-  //       Authorization: token
-  //     },
-  //     success: function( result ) {
-  //       console.log('success', result)
-  //       chrome.runtime.sendMessage({ cmd: 'store', payload: result });
-  //     }
-  //   });
-  // });
 }
 
 /**
@@ -187,3 +134,17 @@ chrome.runtime.onMessage.addListener( function(request, sender, sendResponse) {
   // 异步支持
   return true;
 });
+
+window.addEventListener ("load", myMain, false);
+function myMain (evt) {
+  var jsInitChecktimer = setInterval (checkForJS_Finish, 200);
+
+  function checkForJS_Finish () {
+      if (document.getElementsByClassName("company")[0]) {
+        clearInterval (jsInitChecktimer);
+
+        // DO YOUR STUFF HERE.
+        init();
+      }
+  }
+}
