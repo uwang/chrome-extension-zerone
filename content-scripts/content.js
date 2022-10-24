@@ -40,13 +40,8 @@ const qcc = {
  */
 const zdeal = {
   getEntityName: function () {
-    if (location.href.includes('info/fund')) {
-      const collections = document.getElementsByClassName("company");
-      return collections[0] ? collections[0].innerText : '';
-    } else if (location.href.includes('info/project')) {
-      const collections = document.getElementsByClassName("companyName");
-      return collections[0] ? collections[0].innerText.replace('公司名称：', '') : '';
-    }
+    const element = document.getElementById('js-entity-name');
+    return element ? element.innerText : '';
   },
   getEntityInfo: function () {
     // http://test.zdeal.com.cn/info/fund/100010324940
