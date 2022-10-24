@@ -1,7 +1,7 @@
 {
   "name": "ZDeal",
   "description": "执中 ZDeal 助手",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "manifest_version": 3,
   "icons": {
     "16": "icons/16.png",
@@ -31,8 +31,8 @@
   "content_scripts": [
     {
       "matches": [
-        "http://*.zdeal.com.cn/info/fund/*",
-        "https://*.zdeal.com.cn/info/fund/*",
+        "http://*.zdeal.com.cn/info/*/*",
+        "https://*.zdeal.com.cn/info/*/*",
         "https://www.qcc.com/*"
       ],
       "js": [

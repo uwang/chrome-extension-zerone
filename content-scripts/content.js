@@ -40,8 +40,13 @@ const qcc = {
  */
 const zdeal = {
   getEntityName: function () {
-    const collections = document.getElementsByClassName("company");
-    return collections[0] ? collections[0].innerText : '';
+    if (location.href.includes('info/fund')) {
+      const collections = document.getElementsByClassName("company");
+      return collections[0] ? collections[0].innerText : '';
+    } else if (location.href.includes('info/project')) {
+      const collections = document.getElementsByClassName("companyName");
+      return collections[0] ? collections[0].innerText.replace('公司名称：', '') : '';
+    }
   },
   getEntityInfo: function () {
     // http://test.zdeal.com.cn/info/fund/100010324940
@@ -136,9 +141,10 @@ chrome.runtime.onMessage.addListener( function(request, sender, sendResponse) {
 window.addEventListener ("load", function (evt) {
   function checkForJS_Finish () {
     if (window.location.href.includes('zdeal.com.cn')) {
-      const entityNameElement = document.getElementsByClassName("company")[0];
-      if (entityNameElement !== undefined && entityNameElement.innerText.length) {
-        console.log('entityName', entityNameElement.innerText);
+
+      const entityName = zdeal.getEntityName();
+      if (entityName !== undefined && entityName.length) {
+        console.log('entityName', entityName);
 
         clearInterval (jsInitChecktimer);
     
