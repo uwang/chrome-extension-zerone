@@ -4,20 +4,20 @@
   "version": "0.1.1",
   "manifest_version": 3,
   "icons": {
-    "16": "img/16.png",
-    "48": "img/48.png",
-    "128": "img/128.png"
+    "16": "icons/16.png",
+    "48": "icons/48.png",
+    "128": "icons/128.png"
   },
   "action": {
     "default_icon": {
-      "16": "img/16-gray.png",
-      "48": "img/48-gray.png",
-      "128": "img/128-gray.png"
+      "16": "icons/16-gray.png",
+      "48": "icons/48-gray.png",
+      "128": "icons/128-gray.png"
     },
     "default_title": "点击查看详情",
-    "default_popup": "html/popup.html"
+    "default_popup": "popup/popup.html"
   },
-  "options_page": "html/options.html",
+  "options_page": "options/options.html",
   "permissions": [
     "contextMenus",
     "tabs",
@@ -36,8 +36,8 @@
         "https://www.qcc.com/*"
       ],
       "js": [
-        "js/jquery-3.6.0.min.js",
-        "js/content.js"
+        "lib/jquery-3.6.0.min.js",
+        "content-scripts/content.js"
       ],
       "run_at": "document_end"
     }

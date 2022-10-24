@@ -7,6 +7,15 @@
 插件 v0.1.1 使用接口 api.zdeal.com.cn/v1/xxx
 插件 v1.0.1 使用接口 api.zdeal.com.cn/v2/xxx
 
+
+## 扩展简介
+
+[扩展概念和体系结构](https://learn.microsoft.com/zh-cn/microsoft-edge/extensions-chromium/getting-started/)
+
+[发布 Microsoft Edge 扩展](https://learn.microsoft.com/zh-cn/microsoft-edge/extensions-chromium/publish/publish-extension)
+
+[Firefox开始支持Chrome的扩展了](https://zhuanlan.zhihu.com/p/21873343)
+
 ## 功能介绍
 
 1. 用户先登录 企查查
