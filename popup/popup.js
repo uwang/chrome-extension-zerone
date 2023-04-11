@@ -66,7 +66,7 @@ function handleEnter (event) {
  */
 function handleSearch (word) {
     chrome.storage.sync.get({
-        webHost: 'https://zdeal.com.cn'
+        webHost: 'https://pe.zerone.com.cn'
       }, function(items) {
         window.open(`${items.webHost}/search/?wd=` + word, '_blank');
       });

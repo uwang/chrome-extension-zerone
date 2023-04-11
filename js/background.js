@@ -272,9 +272,9 @@ chrome.tabs.onActivated.addListener(async function (activeInfo) {
   const uri = tab.url ? new URL(tab.url) : { host: '' }
   const suffix = uri && uri.host.endsWith('zdeal.com.cn') ? '' : '-gray'
   chrome.action.setIcon({ path: {
-    "16": `../img/16${suffix}.png`,
-    "48": `../img/48${suffix}.png`,
-    "128": `../img/128${suffix}.png`
+    "16": `../icons/16${suffix}.png`,
+    "48": `../icons/48${suffix}.png`,
+    "128": `../icons/128${suffix}.png`
   } });
   // console.log('activeInfo', activeInfo);
   // console.log('change tab', activeInfo.tabId);

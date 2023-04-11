@@ -29,7 +29,7 @@ function restore_options() {
   // Use default value username = 'xxx' and password = 'yyy'.
   chrome.storage.sync.get(
     {
-      webHost: "https://zdeal.com.cn",
+      webHost: "https://pe.zerone.com.cn",
       apiHost: "https://smart.zdeal.com.cn",
       username: "xxx",
       password: "yyy",

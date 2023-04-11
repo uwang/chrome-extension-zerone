@@ -120,7 +120,6 @@ chrome.runtime.onMessage.addListener( function(request, sender, sendResponse) {
    * 在 qcc.com 下返回 cookie 和 tid
    */
   if (request.cmd === 'ask.qcc') {
-    // const cookie = qcc.getCookie();
     const tid = qcc.getTid();
     const message = { cmd: request.cmd, payload: { tid }};
     console.log('发送', message);
@@ -135,7 +134,7 @@ chrome.runtime.onMessage.addListener( function(request, sender, sendResponse) {
 
 window.addEventListener ("load", function (evt) {
   function checkForJS_Finish () {
-    if (window.location.href.includes('zdeal.com.cn')) {
+    if (window.location.href.includes('zerone.com.cn')) {
 
       const entityName = zdeal.getEntityName();
       if (entityName !== undefined && entityName.length) {
