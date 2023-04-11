@@ -1,5 +1,30 @@
 # chrome extension
 
+## 基本原理
+
+```json
+{
+  "content_scripts": [
+    {
+      "matches": [
+        "http://*.zerone.com.cn/info/*/*",
+        "https://*.zerone.com.cn/info/*/*",
+        "https://www.qcc.com/*"
+      ],
+      "js": ["lib/jquery-3.6.0.min.js", "content-scripts/content.js"],
+      "run_at": "document_end"
+    }
+  ]
+}
+```
+
+content script 会在以下页面运行：
+    - http://*.zerone.com.cn/info/*/*，向 background 发送 entityName
+    - https://*.zerone.com.cn/info/*/*，向 background 发送 entityName
+    - https://www.qcc.com/*，向 background 发送企查查的 tid 和 cookie
+
+background script 拿到 entityName、企查查的 tid 和 cookie 后调用接口进行爬取，并将结果反馈给 content script
+
 ## 产品规划
 
 接口需要增加版本号的概念。多个版本的插件和数据接口会并存，确保老版本插件也可以正常使用。例如：
