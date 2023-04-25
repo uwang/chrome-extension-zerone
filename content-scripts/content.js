@@ -5,7 +5,6 @@
 
 window.console.log("content js loaded");
 
-
 /**
  * qcc.com 的 content script 主要就是返回 cookie 和 tid
  */
@@ -114,7 +113,7 @@ function initForZdeal () {
  * 监听消息
  * 不管是在后台，还是在内容脚本中，我们都使用 runtime.onMessage 监听消息的接收事件，不同的是回调函数中的sender，标识不同的发送方
  */
-chrome.runtime.onMessage.addListener( function(request, sender, sendResponse) {
+chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
   console.log('recevie message ', sender.tab ? "from a content script:" + sender.tab.url : "from the background script");
   /**
    * 在 qcc.com 下返回 cookie 和 tid
@@ -132,6 +131,9 @@ chrome.runtime.onMessage.addListener( function(request, sender, sendResponse) {
   return true;
 });
 
+/**
+ * 页面加载完成，初始化
+ */
 window.addEventListener ("load", function (evt) {
   function checkForJS_Finish () {
     if (window.location.href.includes('zerone.com.cn')) {

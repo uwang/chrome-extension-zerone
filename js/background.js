@@ -111,6 +111,57 @@ async function fetchReport (data1, api_url, formData) {
   return report_url;
 }
 
+
+/**
+ * 获取 report-url 后，返回给 sender
+ * @param {*} qccTab 
+ * @param {*} request 
+ * @param {*} sendResponse 
+ */
+function getQccAndCrawlData (qccTab, request, sendResponse) {
+  chrome.cookies.getAll({ domain: '.qcc.com' }, function (cookies) {
+    const cookieList = [];
+    cookies.forEach(cookie => {
+      cookieList.push(cookie.name + ':' + cookie.value);
+    });
+    const cookieStr = cookieList.join('; ');
+    console.log('cookies', cookieStr);
+
+    // 向 qcc.com 请求数据
+    sendMessageToContentScript(qccTab.id, { cmd: request.cmd }, async function (response) {
+      console.log('answer.qcc', response);
+      if (response) {
+        const api_url = 'http://fusion.zdeal.com.cn/server_v2/select';
+        const formData = new FormData();
+        formData.append('company_name', request.payload.entityName);
+        formData.append('cookie', cookieStr);
+        formData.append('init_window_tid', response.payload.tid);
+
+        console.log('company_name', request.payload.entityName)
+        console.log('cookie', cookieStr)
+        console.log('init_window_tid', response.payload.tid)
+
+        // 获取 qcc 链接地址
+        const response1 = await fetch(api_url, { method: 'POST', body: formData });
+        const data1 = await response1.json();
+
+        // 启动爬取流程
+        if (data1.code === 500) {
+          console.log('Step3-1', data1);
+          // 请求 qcc 链接
+          const report_url = await fetchReport(data1, api_url, formData);
+          sendResponse({ url: report_url });
+        }
+        // 已经生成好报告了，直接输出
+        if (data1.code === 200) {
+          sendResponse({ url: data1.data[8] });
+          console.log('End', data1);
+        }
+      }
+    });
+  });
+}
+
 /**
  * 监听消息
  * 不管是在后台，还是在内容脚本中，我们都使用 runtime.onMessage 监听消息的接收事件，不同的是回调函数中的 sender，标识不同的发送方
@@ -118,55 +169,25 @@ async function fetchReport (data1, api_url, formData) {
  chrome.runtime.onMessage.addListener( function(request, sender, sendResponse) {
   const text = 'recevie message ' + (sender.tab ? "from a content script:" + sender.tab.url : "from the background script")
   console.log(text, request);
+
   if (request.cmd === 'ask.qcc') {
     // console.log('sender.tab.id', sender.tab.id);
     // 查找企查查的 tab
     chrome.tabs.query({ url: 'https://www.qcc.com/*' }, function (tabs) {
       if (!tabs.length) {
-        chrome.tabs.create({ url: 'https://www.qcc.com/' });
-        sendResponse();
-      } else {
-        // 获取 report-url 后，返回给 sender
-        const tab = tabs[0];
-
-        chrome.cookies.getAll({ domain: '.qcc.com' }, function (cookies) {
-          const cookieList = [];
-          cookies.forEach(cookie => {
-            cookieList.push(cookie.name + ':' + cookie.value);
-          });
-          const cookieStr = cookieList.join('; ');
-          console.log('cookies', cookieStr);
-
-          // 向 qcc.com 请求数据
-          sendMessageToContentScript(tab.id, { cmd: request.cmd }, async function (response) {
-            console.log('answer.qcc', response);
-            if (response) {
-              const api_url = 'http://fusion.zdeal.com.cn/server_v2/select';
-              const formData = new FormData();
-              formData.append('company_name', request.payload.entityName);
-              formData.append('cookie', cookieStr);
-              formData.append('init_window_tid', response.payload.tid);
-  
-              // 获取 qcc 链接地址
-              const response1 = await fetch(api_url, { method: 'POST', body: formData });
-              const data1 = await response1.json();
-  
-              // 启动爬取流程
-              if (data1.code === 500) {
-                console.log('Step3-1', data1);
-                // 请求 qcc 链接
-                const report_url = await fetchReport(data1, api_url, formData);
-                sendResponse({ url: report_url });
-              }
-              // 已经生成好报告了，直接输出
-              if (data1.code === 200) {
-                sendResponse({ url: data1.data[8] });
-                console.log('End', data1);
-              }
-            }
-          });
+        // 如果没有 qcc.com 的 tab 页面，则创建一个
+        chrome.tabs.create({ url: 'https://www.qcc.com/' }, function (tab) {
+          console.log('create qcc tab', tab);
+          // 等待新开的 qqc.com 页面加载完成
+          setTimeout(function() {
+            console.log('after create qqc tab and sender message to it')
+            getQccAndCrawlData(tab, request, sendResponse);
+          }, 4000);
         });
-        return true;
+      } else {
+        const tab = tabs[0];
+        console.log('get qcc tab', tab);
+        getQccAndCrawlData(tab, request, sendResponse);
       }
     });
   } else {
@@ -186,7 +207,16 @@ let tag = '';
  */
 function sendMessageToContentScript(tabId, message, callback) {
   chrome.tabs.sendMessage(tabId, message, function (response) {
-    if (callback) callback(response);
+    if (chrome.runtime.lastError) {
+      // 标签页不存在或已关闭
+      console.log(chrome.runtime.lastError);
+
+      // 重新刷新详情页
+      console.warn('页面初始化失败，请确保 qcc.com 正常登录后，刷新详情页')
+    } else {
+      // 正常处理 response
+      if (callback) callback(response);
+    }
   });
 }
 // function sendMessageToContentScript(message, callback) {
